@@ -1,5 +1,7 @@
 import pygame
 
+pygame.init()
+pygame.font.init()
 class GridBox:
     def __init__(self, index):
         self.index = index
@@ -69,6 +71,22 @@ class Game:
         pygame.draw.line(self.screen, (0, 0, 0), (150, 0), (150, 450), 3)
         pygame.draw.line(self.screen, (0, 0, 0), (300, 0), (300, 450), 3)
 
+    def display_info(self):
+        player = "O" if self.current == 0 else "X"
+        color = self.PINK if self.current == 0 else self.BLUE
+        
+        if self.win:
+            player = "O" if self.current == 1 else "X"
+            text = f"{player} Won!"
+            color = self.PINK if self.current == 1 else self.BLUE
+        else:
+            text = f"{player}'s Turn"
+
+        text_element = pygame.font.SysFont("comicsans", 35).render(text, True, color)
+        text_rect = text_element.get_rect()
+        text_rect.center = (450/2, 500)
+        self.screen.blit(text_element, text_rect)
+
     def run(self):
         while self.RUNNING:
             for event in pygame.event.get():
@@ -87,6 +105,7 @@ class Game:
                             self.win = True
                     self.screen.blit(x.surface, (x.x, x.y))
             self.draw_grid_lines()
+            self.display_info()
             if self.win:
                 pygame.draw.line(self.screen, (0, 0, 0), self.win_line[0], self.win_line[1], 8)
             self.CLOCK.tick(60)
