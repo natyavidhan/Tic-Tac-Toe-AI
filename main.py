@@ -47,6 +47,9 @@ class Game:
         self.win = False
         self.win_line = []
 
+        self.PINK = (241, 99, 122)
+        self.BLUE = (22, 157, 200)
+
     def check_win(self):
         combinations = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]
         flat_grid = []
@@ -60,6 +63,11 @@ class Game:
                 return str(flat_grid[c[0]].typ)
         return False
 
+    def draw_grid_lines(self):
+        pygame.draw.line(self.screen, (0, 0, 0), (0, 150), (450, 150), 3)
+        pygame.draw.line(self.screen, (0, 0, 0), (0, 300), (450, 300), 3)
+        pygame.draw.line(self.screen, (0, 0, 0), (150, 0), (150, 450), 3)
+        pygame.draw.line(self.screen, (0, 0, 0), (300, 0), (300, 450), 3)
 
     def run(self):
         while self.RUNNING:
@@ -78,6 +86,7 @@ class Game:
                             print(f"{p[int(win)]} Won!")
                             self.win = True
                     self.screen.blit(x.surface, (x.x, x.y))
+            self.draw_grid_lines()
             if self.win:
                 pygame.draw.line(self.screen, (0, 0, 0), self.win_line[0], self.win_line[1], 8)
             self.CLOCK.tick(60)
