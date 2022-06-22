@@ -10,22 +10,14 @@ class GridBox:
         self.width = 150
         self.height = 150
         self.typ = None
-        self.surface = pygame.Surface((self.width, self.height))
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        pygame.draw.rect(self.surface, (0, 0, 0), (0, 0, self.width, self.height), 3, 15)
-        self.center_rect = pygame.Rect(0, 0, 120, 120)
-        self.center_rect.center = (self.width/2, self.height/2)
 
         self.assets = [
-            pygame.transform.scale(pygame.image.load("assets/o.png"), (120, 120)),
-            pygame.transform.scale(pygame.image.load("assets/x.png"), (120, 120)),
+            pygame.image.load("assets/o.png"),
+            pygame.image.load("assets/x.png"),
         ]
-        self.surface.fill((255, 255, 255))
 
     def update(self, current):
-        self.surface.fill((255, 255, 255))
-        if self.typ is not None:
-            self.surface.blit(self.assets[self.typ], (self.center_rect.x, self.center_rect.y))
         if current is None:
             return
         if self.typ is None:
@@ -51,6 +43,7 @@ class Game:
 
         self.PINK = (241, 99, 122)
         self.BLUE = (22, 157, 200)
+        self.background = pygame.image.load("assets/grid.png")
 
     def check_win(self):
         combinations = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]
@@ -65,16 +58,10 @@ class Game:
                 return str(flat_grid[c[0]].typ)
         return False
 
-    def draw_grid_lines(self):
-        pygame.draw.line(self.screen, (0, 0, 0), (0, 150), (450, 150), 3)
-        pygame.draw.line(self.screen, (0, 0, 0), (0, 300), (450, 300), 3)
-        pygame.draw.line(self.screen, (0, 0, 0), (150, 0), (150, 450), 3)
-        pygame.draw.line(self.screen, (0, 0, 0), (300, 0), (300, 450), 3)
-
     def display_info(self):
         player = "O" if self.current == 0 else "X"
         color = self.PINK if self.current == 0 else self.BLUE
-        
+
         if self.win:
             player = "O" if self.current == 1 else "X"
             text = f"{player} Won!"
@@ -93,6 +80,7 @@ class Game:
                 if event.type == pygame.QUIT:
                     self.RUNNING = False
             self.screen.fill((255, 255, 255))
+            self.screen.blit(self.background, (0, 0))
             for y in self.game_grid:
                 for x in y:
                     e = x.update(self.current if not self.win else None)
@@ -103,8 +91,8 @@ class Game:
                             p = ["O", "X"]
                             print(f"{p[int(win)]} Won!")
                             self.win = True
-                    self.screen.blit(x.surface, (x.x, x.y))
-            self.draw_grid_lines()
+                    if x.typ != None:
+                        self.screen.blit(x.assets[x.typ], (x.x, x.y))
             self.display_info()
             if self.win:
                 pygame.draw.line(self.screen, (0, 0, 0), self.win_line[0], self.win_line[1], 8)
