@@ -1,6 +1,8 @@
 import pygame
 import time
 
+import algo
+
 pygame.init()
 pygame.font.init()
 class GridBox:
@@ -18,16 +20,19 @@ class GridBox:
             pygame.image.load("assets/x.png"),
         ]
 
-    def update(self, current, turn=False):
+    def update(self, current, turn=False, check=None):
         if current is None:
             return
         if turn:
             self.typ = current
-        if self.typ is None:
-            if self.rect.collidepoint(pygame.mouse.get_pos()):
-                if pygame.mouse.get_pressed()[0]:
-                    self.typ = current
-                    return True
+            return True
+        
+        check = check==current if check is not None else False
+
+        if self.typ is None and not check:
+            if self.rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
+                self.typ = current
+                return True
 
 class Game:
     def __init__(self):
@@ -108,16 +113,57 @@ class Game:
         if back_btn.collidepoint(pygame.mouse.get_pos()):
             if pygame.mouse.get_pressed()[0]:
                 self.current_scene = "menu"
+    
+    def player_vs_ai(self):
+        self.screen.blit(self.grid, (0, 0))
+        if self.current == 1:
+            ai_move = algo.playmove(self.game_grid)
+            x = ai_move%3
+            y = ai_move//3
+            e = self.game_grid[y][x].update(self.current if not self.win else None, turn=True)
+            if e:
+                self.current = 0
+                win = self.check_win()
+                if win:
+                    self.win = True
+        else:
+            for y in self.game_grid:
+                for x in y:
+                    e = x.update(self.current if not self.win else None, check=1)
+                    if e:
+                        self.current = 1
+                        win = self.check_win()
+                        if win:
+                            self.win = True
+        
+        for y in self.game_grid:
+            for x in y:
+                if x.typ != None:
+                    self.screen.blit(x.assets[x.typ], (x.x, x.y))
+
+        self.display_info()
+        if self.win:
+            pygame.draw.line(self.screen, self.TOPLEVEL, self.win_line[0], self.win_line[1], 8)
+        back_btn = pygame.Rect(15, 490, 90, 50)
+        if back_btn.collidepoint(pygame.mouse.get_pos()):
+            if pygame.mouse.get_pressed()[0]:
+                self.current_scene = "menu"
+
 
     def menu(self):
         self.screen.blit(self.home, (0, 0))
         btn_1 = pygame.Rect(100, 315, 250, 70)
         btn_2 = pygame.Rect(100, 400, 250, 70)
-        if btn_1.collidepoint(pygame.mouse.get_pos()):
-            if pygame.mouse.get_pressed()[0]:
+        if pygame.mouse.get_pressed()[0]:
+            if btn_1.collidepoint(pygame.mouse.get_pos()):
                 time.sleep(0.5)
                 self.restart()
                 self.current_scene = "pvp"
+
+            if btn_2.collidepoint(pygame.mouse.get_pos()):
+                time.sleep(0.5)
+                self.restart()
+                self.current_scene = "pva"
 
     def run(self):
         while self.RUNNING:
@@ -129,6 +175,8 @@ class Game:
                 self.menu()
             elif self.current_scene == "pvp":
                 self.player_vs_player()
+            elif self.current_scene == "pva":
+                self.player_vs_ai()
             self.CLOCK.tick(60)
             pygame.display.update()
 
