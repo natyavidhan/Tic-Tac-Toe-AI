@@ -8,4 +8,4 @@ def playmove(grid):
             if x.typ == None:
                 available.append(index)
             index+=1
-    return random.choice(available)
+    return random.choice(available) if len(available) > 0 else None

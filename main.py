@@ -22,7 +22,7 @@ class GridBox:
 
     def update(self, current, turn=False, check=None):
         if current is None:
-            return
+            return False
         if turn:
             self.typ = current
             return True
@@ -47,6 +47,7 @@ class Game:
 
         self.current = 0
         self.win = False
+        self.draw = False
         self.win_line = []
         self.current_scene = "menu"
 
@@ -59,14 +60,23 @@ class Game:
     def check_win(self):
         combinations = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]
         flat_grid = []
+        draw = True
         for y in self.game_grid:
             for x in y:
                 flat_grid.append(x)
+
         for c in combinations:
             if flat_grid[c[0]].typ == flat_grid[c[1]].typ == flat_grid[c[2]].typ != None:
                 self.win_line.append((flat_grid[c[0]].x+75, flat_grid[c[0]].y+75))
                 self.win_line.append((flat_grid[c[2]].x+75, flat_grid[c[2]].y+75))
                 return str(flat_grid[c[0]].typ)
+        
+        for i in flat_grid:
+            if i.typ == None:
+                draw = False
+                break
+        if draw:
+            self.draw = True
         return False
 
     def display_info(self):
@@ -75,8 +85,11 @@ class Game:
         if self.win:
             player = "O" if self.current == 1 else "X"
             text = f"{player} Won!"
+        elif self.draw:
+            text = "Draw!"
         else:
             text = f"{player}'s Turn"
+
 
         text_element = pygame.font.SysFont("comicsans", 35).render(text, True, self.TOPLEVEL)
         text_rect = text_element.get_rect()
@@ -90,19 +103,19 @@ class Game:
 
         self.current = 0
         self.win = False
+        self.draw = False
         self.win_line = []
     
     def player_vs_player(self):
         self.screen.blit(self.grid, (0, 0))
         for y in self.game_grid:
             for x in y:
-                e = x.update(self.current if not self.win else None)
+                e = x.update(self.current if not self.win and not self.draw else None)
                 if e:
                     self.current = 1 if self.current == 0 else 0
                     win = self.check_win()
                     if win:
                         p = ["O", "X"]
-                        print(f"{p[int(win)]} Won!")
                         self.win = True
                 if x.typ != None:
                     self.screen.blit(x.assets[x.typ], (x.x, x.y))
@@ -118,18 +131,19 @@ class Game:
         self.screen.blit(self.grid, (0, 0))
         if self.current == 1:
             ai_move = algo.playmove(self.game_grid)
-            x = ai_move%3
-            y = ai_move//3
-            e = self.game_grid[y][x].update(self.current if not self.win else None, turn=True)
-            if e:
-                self.current = 0
-                win = self.check_win()
-                if win:
-                    self.win = True
+            if ai_move is not None:
+                x = ai_move%3
+                y = ai_move//3
+                e = self.game_grid[y][x].update(self.current if not self.win and not self.draw else None, turn=True)
+                if e:
+                    self.current = 0
+                    win = self.check_win()
+                    if win:
+                        self.win = True
         else:
             for y in self.game_grid:
                 for x in y:
-                    e = x.update(self.current if not self.win else None, check=1)
+                    e = x.update(self.current if not self.win and not self.draw else None, check=1)
                     if e:
                         self.current = 1
                         win = self.check_win()
